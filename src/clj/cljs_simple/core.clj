@@ -1,5 +1,6 @@
 (ns cljs-simple.core
-  (:require [compojure.core :refer [defroutes GET POST]]
+  (:require [clojure.core.async :refer [>!]]
+            [compojure.core :refer [defroutes GET POST]]
             [compojure.handler :refer [site]]
             [compojure.route :as route]
             [org.httpkit.server :refer [run-server]]
@@ -7,7 +8,8 @@
             [ring.middleware.json :refer [wrap-json-response]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.reload :as reload]
-            [ring.util.response :refer [response]]))
+            [ring.middleware.resource :refer [wrap-resource]]
+            [ring.util.response :refer [response resource-response]]))
 
 (defn handler [id]
   {:body {:id id}})
@@ -22,11 +24,13 @@
   (POST "/post-json" request ((-> #(response (:body %)) wrap-json-response) request))
 
   (route/resources "/")
-  (route/not-found "Page not found"))
+  (GET "/*" [] (resource-response "index.html" {:root "public"}))
+  ;; (route/not-found "not found")
+  )
 
-(def app (-> routes wrap-params))
+(def app (-> routes (wrap-resource "") wrap-params))
 
 (defn -main [& args]
   (let [handler (reload/wrap-reload (site #'app))]
-    (run-server handler {:port 3000}))
-  (println "start server port 3000"))
+    (run-server handler {:port 3001}))
+  (println "start server port 3001"))

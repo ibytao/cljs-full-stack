@@ -1,7 +1,4 @@
-(ns cljs-simple.bootstrap-modal
-  (:require [reagent.core :as reagent]
-            [reagent-modals.modals :as reagent-modals]))
-
+(ns cljs-simple.bootstrap-modal)
 
 (defn dialog []
   [:div
@@ -16,14 +13,14 @@
     [:button {:type "button" :class "btn btn-primary"} "Save changes"]]]
   )
 
-(defn modal-window-button []
-  [:div.btn.btn-primary
-   {:on-click #(reagent-modals/modal! [dialog] {})}
-   "My Modal"])
+;; (defn modal-window-button []
+;;   [:div.btn.btn-primary
+;;    {:on-click #(reagent-modals/modal! [dialog] {})}
+;;    "My Modal"])
 
-(defn home []
-  [:div
-   [:h1 "bootstrap modal"]
-   [reagent-modals/modal-window]
-   [modal-window-button]]
-  )
+;; (defn home []
+;;   [:div
+;;    [:h1 "bootstrap modal"]
+;;    [reagent-modals/modal-window]
+;;    [modal-window-button]]
+;;   )

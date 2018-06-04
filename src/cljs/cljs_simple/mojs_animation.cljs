@@ -5,7 +5,7 @@
 
 (enable-console-print!)
 
-(println (calc/add 4 5))
+(println (calc/add 14 25))
 
 (defn translate-y [node]
   (fn [progress]

@@ -1,4 +1,4 @@
-// Compiled by ClojureScript 1.9.293 {}
+// Compiled by ClojureScript 1.10.238 {}
 goog.provide('cljs_simple.basic_component');
 goog.require('cljs.core');
 goog.require('reagent.core');
@@ -23,4 +23,4 @@ return console.log("basic-component component-will-mount");
 })], null));
 });
 
-//# sourceMappingURL=basic_component.js.map?rel=1485761762571
+//# sourceMappingURL=basic_component.js.map?rel=1527566158161

@@ -27,13 +27,13 @@
   :format (json-request-format)
   :response-format (json-response-format {:keywords? true})})
 
-(ajax-request
- {:uri "http://localhost/~buck/info.php"
-  :method :post
-  :params {:message "info php" :user "Bob"}
-  :handler #(js/console.log (str %))
-  :format (json-request-format)
-  :response-format (json-response-format {:keywords? true})})
+;; (ajax-request
+;;  {:uri "http://localhost/~buck/info.php"
+;;   :method :post
+;;   :params {:message "info php" :user "Bob"}
+;;   :handler #(js/console.log (str %))
+;;   :format (json-request-format)
+;;   :response-format (json-response-format {:keywords? true})})
 
 (ajax-request
  {:uri "/send-message"

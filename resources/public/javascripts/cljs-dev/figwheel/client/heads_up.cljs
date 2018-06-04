@@ -83,7 +83,7 @@
 (defn set-style! [{:keys [container-el]} st-map]
   (mapv
    (fn [[k v]]
-     (aset (.-style container-el) (name k) v))
+     (gobj/set (.-style container-el) (name k) v))
    st-map))
 
 (defn set-content! [{:keys [content-area-el] :as c} dom-str]
@@ -209,7 +209,7 @@
                                 ": ") "")
                         "<span style=\"font-weight:bold;\">" (escape message) "</span>")
                    (when display-ex-data
-                     (str "<pre>" (utils/pprint-to-string display-ex-data) "</pre>"))
+                     (str "<pre style=\"white-space: pre-wrap\">" (utils/pprint-to-string display-ex-data) "</pre>"))
                    (when (pos? (count error-inline))
                      (format-inline-error error-inline))]
                   (map #(str (escape (:class %))

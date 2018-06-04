@@ -1,12 +1,14 @@
 (ns ^:figwheel-no-load figwheel.client.utils
   (:require [clojure.string :as string]
             [goog.string :as gstring]
+            [goog.object :as gobj]
             [cljs.reader :refer [read-string]]
             [cljs.pprint :refer [pprint]]
             [goog.userAgent.product :as product])
   (:import [goog]
            [goog.async Deferred]
-           [goog.string StringBuffer]))
+           [goog.string StringBuffer])
+  (:require-macros [figwheel.client.utils :refer [feature?]]))
 
 ;; don't auto reload this file it will mess up the debug printing
 
@@ -14,16 +16,23 @@
 
 (defn html-env? [] (not (nil? goog/global.document)))
 
+(defn react-native-env? [] (and (exists? goog/global.navigator)
+                                (= goog/global.navigator.product "ReactNative")))
+
 (defn node-env? [] (not (nil? goog/nodeGlobalRequire)))
+
+(defn html-or-react-native-env? []
+  (or (html-env?) (react-native-env?)))
 
 (defn worker-env? [] (and
                       (nil? goog/global.document)
                       (exists? js/self)
                       (exists? (.-importScripts js/self))))
 
-(defn host-env? [] (cond (node-env?)   :node
-                         (html-env?)   :html
-                         (worker-env?) :worker))
+(defn host-env? [] (cond (node-env?)         :node
+                         (html-env?)         :html
+                         (react-native-env?) :react-native
+                         (worker-env?)       :worker))
 
 (defn base-url-path [] (string/replace goog/basePath #"(.*)goog/" "$1"))
 
@@ -41,26 +50,26 @@
 ;; actually we should probably lift the event system here off the DOM
 ;; so that we work well in Node and other environments
 (defn dispatch-custom-event [event-name data]
-  (when (and (html-env?) (aget js/window "CustomEvent") (js* "typeof document !== 'undefined'"))
+  (when (and (html-env?) (gobj/get js/window "CustomEvent") (js* "typeof document !== 'undefined'"))
     (.dispatchEvent (.-body js/document)
                     (create-custom-event event-name data))))
 
 (defn debug-prn [o]
   (when *print-debug*
     (let [o (if (or (map? o)
-                  (seq? o))
-            (prn-str o)
-            o)]
+                    (seq? o))
+              (prn-str o)
+              o)]
       (.log js/console o))))
 
 (defn log
   ([x] (log :info x))
   ([level arg]
-   (let [f (condp = (if (html-env?) level :info)
-            :warn  #(.warn js/console %)
-            :debug #(.debug js/console %)
-            :error #(.error js/console %)
-            #(.log js/console %))]
+   (let [f (condp = (if (html-or-react-native-env?) level :info)
+             :warn  #(.warn js/console %)
+             :debug #(.debug js/console %)
+             :error #(.error js/console %)
+             #(.log js/console %))]
      (f arg))))
 
 (defn eval-helper [code {:keys [eval-fn] :as opts}]
@@ -102,17 +111,16 @@
              deferred coll)
      (fn [_] (.succeed Deferred @results)))))
 
-
 ;; persistent storage of configuration keys
 
 (defonce local-persistent-config
   (let [a (atom {})]
-    (when (exists? js/localStorage)
+    (when (feature? js/localStorage "setItem")
       (add-watch a :sync-local-storage
                  (fn [_ _ _ n]
-                    (mapv (fn [[ky v]]
-                            (.setItem js/localStorage (name ky) (pr-str v)))
-                          n))))
+                   (mapv (fn [[ky v]]
+                           (.setItem js/localStorage (name ky) (pr-str v)))
+                         n))))
     a))
 
 (defn persistent-config-set!
@@ -123,13 +131,17 @@ the browser gets reloaded."
 
 (defn persistent-config-get
   ([ky not-found]
-   (cond
-     (contains? @local-persistent-config ky)
-     (get @local-persistent-config ky)
-     (and (exists? js/localStorage) (.getItem js/localStorage (name ky)))
-     (let [v (read-string (.getItem js/localStorage (name ky)))]
-       (persistent-config-set! ky v)
-       v)
-     :else not-found))
+   (try
+     (cond
+       (contains? @local-persistent-config ky)
+       (get @local-persistent-config ky)
+       (and (feature? js/localStorage "getItem")
+            (.getItem js/localStorage (name ky)))
+       (let [v (read-string (.getItem js/localStorage (name ky)))]
+         (persistent-config-set! ky v)
+         v)
+       :else not-found)
+     (catch js/Error e
+       not-found)))
   ([ky]
    (persistent-config-get ky nil)))

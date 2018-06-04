@@ -21,7 +21,7 @@
   (let [component-state (reagent/atom {:count 0})]
     [:div
      [:p "Current count is: " (:count @component-state)]
-     (.log js/console (str "Foo Mistake 2 is being rendered"))
+     (.log js/console (str "Foo Mistake 2 is being rendered count: " (:count @component-state)))
      [:button {:on-click #(swap! component-state update-in [:count] inc)} "Increment"]]))
 
 (defn foo-inner-let []
